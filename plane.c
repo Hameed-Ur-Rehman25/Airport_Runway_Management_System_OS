@@ -1,5 +1,6 @@
 #include "plane.h"
 #include "runway.h"
+#include "gui.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -75,6 +76,9 @@ void *plane_thread_function(void *arg)
         runway_print_status("[EMERGENCY] Plane %d added to EMERGENCY queue (Queue size: %d)",
                             plane->id,
                             queue_get_count(&runway_system.emergency_queue));
+        // Update GUI
+        gui_update_queues();
+        gui_update_stats();
     }
     else
     {
@@ -84,6 +88,9 @@ void *plane_thread_function(void *arg)
         runway_print_status("[QUEUE] Plane %d added to NORMAL queue (Queue size: %d)",
                             plane->id,
                             queue_get_count(&runway_system.normal_queue));
+        // Update GUI
+        gui_update_queues();
+        gui_update_stats();
     }
 
     // Request runway access (priority-based scheduling)
@@ -108,6 +115,9 @@ void *plane_thread_function(void *arg)
     sem_wait(&runway_system.completed_sem);
     runway_system.planes_completed++;
     sem_post(&runway_system.completed_sem);
+
+    // Update GUI
+    gui_update_stats();
 
     return NULL;
 }

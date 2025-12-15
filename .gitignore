@@ -1,0 +1,4 @@
+# Build artifacts
+*.o
+runway_simulator
+.DS_Store

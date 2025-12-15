@@ -1,4 +1,5 @@
 #include "runway.h"
+#include "gui.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -51,15 +52,32 @@ void runway_print_status(const char *format, ...)
     char time_str[9];
     strftime(time_str, sizeof(time_str), "%H:%M:%S", tm_info);
 
-    printf("[%s] ", time_str);
+    if (gui_enabled)
+    {
+        // Format message for GUI
+        char buffer[256];
+        va_list args;
+        va_start(args, format);
+        vsnprintf(buffer, sizeof(buffer), format, args);
+        va_end(args);
 
-    va_list args;
-    va_start(args, format);
-    vprintf(format, args);
-    va_end(args);
+        char full_msg[300];
+        snprintf(full_msg, sizeof(full_msg), "[%s] %s", time_str, buffer);
+        gui_log_event("%s", full_msg);
+    }
+    else
+    {
+        // Console output
+        printf("[%s] ", time_str);
 
-    printf("\n");
-    fflush(stdout);
+        va_list args;
+        va_start(args, format);
+        vprintf(format, args);
+        va_end(args);
+
+        printf("\n");
+        fflush(stdout);
+    }
 
     sem_post(&runway_system.console_access);
 }
@@ -101,6 +119,10 @@ void runway_request_access(Plane *plane)
     sem_wait(&runway_system.active_plane_sem);
     runway_system.active_plane = plane;
     sem_post(&runway_system.active_plane_sem);
+
+    // Update GUI
+    gui_update_runway(plane);
+    gui_update_queues();
 }
 
 // Perform runway operation with checkpoint support
@@ -149,6 +171,9 @@ void runway_perform_operation(Plane *plane)
         if (plane->checkpoint_progress > 100)
             plane->checkpoint_progress = 100;
 
+        // Update GUI runway display
+        gui_update_runway(plane);
+
         // Check for emergency preemption (only for normal planes)
         if (plane->priority == NORMAL)
         {
@@ -174,6 +199,10 @@ void runway_perform_operation(Plane *plane)
                 runway_system.active_plane = NULL;
                 sem_post(&runway_system.active_plane_sem);
 
+                // Update GUI
+                gui_update_runway(NULL);
+                gui_update_stats();
+
                 // Release runway
                 sem_post(&runway_system.runway_access);
 
@@ -189,11 +218,8 @@ void runway_perform_operation(Plane *plane)
                 runway_print_status("[REQUEUE] Plane %d re-queued to NORMAL queue with checkpoint at %d%%",
                                     plane->id, plane->checkpoint_progress);
 
-                // Wait on resume semaphore (will be signaled when can retry)
-                // For this implementation, we'll request access again
-                runway_request_access(plane);
-
-                // Recursive call to resume operation
+                // Update GUI queues
+                gui_update_queues();
                 runway_perform_operation(plane);
                 return;
             }
@@ -218,6 +244,10 @@ void runway_release(Plane *plane)
     sem_post(&runway_system.runway_access);
 
     runway_print_status("[RELEASE] Plane %d released runway", plane->id);
+
+    // Update GUI
+    gui_update_runway(NULL);
+    gui_update_stats();
 }
 
 // Display final statistics

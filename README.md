@@ -4,6 +4,8 @@
 
 This project simulates an airport runway management system using Operating System concepts such as **semaphores**, **synchronization**, and **priority scheduling**. The system models planes as processes (threads) competing for access to a single runway resource, with emergency aircraft receiving higher priority and the ability to preempt normal operations.
 
+**✨ NEW: GUI Mode Available!** Run with `-g` flag for real-time visual interface using ncurses. See [GUI_README.md](GUI_README.md) for details.
+
 ## Operating System Concepts Demonstrated
 
 ### 1. **Semaphores**
@@ -42,8 +44,12 @@ OS_Project/
 ├── plane.c         # Plane thread implementation
 ├── queue.h         # Dynamic linked-list queue interface
 ├── queue.c         # Queue operations with semaphore protection
+├── gui.h           # GUI interface definitions (ncurses)
+├── gui.c           # Real-time visual interface implementation
 ├── Makefile        # Build configuration
-└── README.md       # This file
+├── README.md       # This file
+├── GUI_README.md   # GUI mode documentation
+└── ARCHITECTURE.md # System architecture and diagrams
 ```
 
 ## Features
@@ -51,6 +57,7 @@ OS_Project/
 ### Core Functionality
 
 - ✈️ **Dual Queue System**: Separate queues for emergency and normal operations
+- 🖥️ **GUI Mode**: Terminal-based visual interface with ncurses (optional)
 - 🔄 **Dynamic Linked Lists**: Flexible queue implementation
 - ⏱️ **Checkpoint/Resume**: Interrupted operations continue from saved state
 - 📊 **Real-time Status Display**: Timestamped console output of all events
@@ -88,7 +95,16 @@ make help
 
 ### Basic Execution
 
+**Console Mode (Text-based):**
+
 ```bash
+./runway_simulator
+```
+
+**GUI Mode (Visual Interface):**
+
+```bash
+./runway_simulator -g
 ./runway_simulator
 ```
 
@@ -113,11 +129,14 @@ Runs with default parameters (10 planes, 15% emergency, 5s landing, 4s takeoff)
 ### Quick Run Commands
 
 ```bash
-# Run with default parameters
+# Run with default parameters (console mode)
 make run
 
-# Run demo with 15 planes and 25% emergency rate
+# Run demo with 15 planes and 25% emergency rate (console mode)
 make run-demo
+
+# Run with GUI mode (visual interface)
+make run-gui
 ```
 
 ## Example Output

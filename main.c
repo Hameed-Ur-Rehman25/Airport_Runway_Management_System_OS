@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include "runway.h"
 #include "plane.h"
+#include "gui.h"
 
 #define DEFAULT_TOTAL_PLANES 10
 #define DEFAULT_EMERGENCY_PROBABILITY 15 // 15%
@@ -33,6 +34,7 @@ void print_usage(const char *program_name)
     printf("  -e <percent>   Emergency probability 0-100 (default: %d%%)\n", DEFAULT_EMERGENCY_PROBABILITY);
     printf("  -l <seconds>   Landing duration (default: %d seconds)\n", DEFAULT_LANDING_DURATION);
     printf("  -t <seconds>   Takeoff duration (default: %d seconds)\n", DEFAULT_TAKEOFF_DURATION);
+    printf("  -g             Enable GUI mode (ncurses visualization)\n");
     printf("  -h             Display this help message\n\n");
     printf("Example:\n");
     printf("  %s -n 20 -e 20 -l 6 -t 4\n", program_name);
@@ -46,10 +48,11 @@ int main(int argc, char *argv[])
     int emergency_prob = DEFAULT_EMERGENCY_PROBABILITY;
     int landing_duration = DEFAULT_LANDING_DURATION;
     int takeoff_duration = DEFAULT_TAKEOFF_DURATION;
+    int use_gui = 0;
 
     // Parse command-line arguments
     int opt;
-    while ((opt = getopt(argc, argv, "n:e:l:t:h")) != -1)
+    while ((opt = getopt(argc, argv, "n:e:l:t:gh")) != -1)
     {
         switch (opt)
         {
@@ -85,6 +88,9 @@ int main(int argc, char *argv[])
                 return 1;
             }
             break;
+        case 'g':
+            use_gui = 1;
+            break;
         case 'h':
             print_usage(argv[0]);
             return 0;
@@ -97,20 +103,30 @@ int main(int argc, char *argv[])
     // Seed random number generator
     srand(time(NULL));
 
+    // Initialize GUI if requested
+    if (use_gui)
+    {
+        gui_init();
+        usleep(500000); // Give GUI time to initialize
+    }
+
     // Print simulation parameters
-    printf("\n");
-    printf("╔══════════════════════════════════════════════════════════╗\n");
-    printf("║   AIRPORT RUNWAY MANAGEMENT SYSTEM SIMULATION           ║\n");
-    printf("╚══════════════════════════════════════════════════════════╝\n");
-    printf("\n");
-    printf("Simulation Parameters:\n");
-    printf("  • Total Planes: %d\n", total_planes);
-    printf("  • Emergency Probability: %d%%\n", emergency_prob);
-    printf("  • Landing Duration: %d seconds\n", landing_duration);
-    printf("  • Takeoff Duration: %d seconds\n", takeoff_duration);
-    printf("  • Checkpoint Interval: 500ms (for preemption checks)\n");
-    printf("\n");
-    printf("═══════════════════════════════════════════════════════════\n\n");
+    if (!use_gui)
+    {
+        printf("\n");
+        printf("╔══════════════════════════════════════════════════════════╗\n");
+        printf("║   AIRPORT RUNWAY MANAGEMENT SYSTEM SIMULATION           ║\n");
+        printf("╚══════════════════════════════════════════════════════════╝\n");
+        printf("\n");
+        printf("Simulation Parameters:\n");
+        printf("  • Total Planes: %d\n", total_planes);
+        printf("  • Emergency Probability: %d%%\n", emergency_prob);
+        printf("  • Landing Duration: %d seconds\n", landing_duration);
+        printf("  • Takeoff Duration: %d seconds\n", takeoff_duration);
+        printf("  • Checkpoint Interval: 500ms (for preemption checks)\n");
+        printf("\n");
+        printf("═══════════════════════════════════════════════════════════\n\n");
+    }
 
     // Initialize runway system
     runway_init(&runway_system, landing_duration, takeoff_duration);
@@ -125,7 +141,14 @@ int main(int argc, char *argv[])
     }
 
     // Create and initialize planes
-    printf("[SETUP] Creating %d planes...\n", total_planes);
+    if (!use_gui)
+    {
+        printf("[SETUP] Creating %d planes...\n", total_planes);
+    }
+    else
+    {
+        gui_log_event("[SETUP] Creating %d planes...", total_planes);
+    }
     for (int i = 0; i < total_planes; i++)
     {
         OperationType op = random_operation();
@@ -133,8 +156,17 @@ int main(int argc, char *argv[])
         plane_init(&planes[i], i + 1, op, priority);
     }
 
-    printf("[SETUP] All planes created. Starting simulation...\n\n");
-    sleep(1);
+    if (!use_gui)
+    {
+        printf("[SETUP] All planes created. Starting simulation...\n\n");
+        sleep(1);
+    }
+    else
+    {
+        gui_log_event("[SETUP] All planes created. Starting simulation...");
+        gui_refresh_all();
+        sleep(1);
+    }
 
     // Spawn plane threads with staggered arrival
     for (int i = 0; i < total_planes; i++)
@@ -150,7 +182,14 @@ int main(int argc, char *argv[])
     }
 
     // Wait for all planes to complete
-    printf("\n[SYSTEM] Waiting for all planes to complete...\n\n");
+    if (!use_gui)
+    {
+        printf("\n[SYSTEM] Waiting for all planes to complete...\n\n");
+    }
+    else
+    {
+        gui_log_event("[SYSTEM] Waiting for all planes to complete...");
+    }
     for (int i = 0; i < total_planes; i++)
     {
         pthread_join(planes[i].thread, NULL);
@@ -158,14 +197,42 @@ int main(int argc, char *argv[])
     }
 
     // Display final statistics
-    printf("\n");
-    runway_display_stats();
+    if (!use_gui)
+    {
+        printf("\n");
+        runway_display_stats();
+    }
+    else
+    {
+        gui_log_event("");
+        gui_log_event("========== SIMULATION COMPLETE ==========");
+        gui_log_event("Press any key to exit...");
+        gui_refresh_all();
+
+        // Wait for keypress
+        timeout(-1);
+        getch();
+
+        // Cleanup GUI
+        gui_destroy();
+
+        // Show stats in console after GUI closes
+        printf("\n");
+        runway_display_stats();
+    }
 
     // Cleanup
     runway_destroy(&runway_system);
     free(planes);
 
-    printf("Simulation completed successfully!\n\n");
+    if (!use_gui)
+    {
+        printf("Simulation completed successfully!\n\n");
+    }
+    else
+    {
+        printf("Simulation completed successfully!\n\n");
+    }
 
     return 0;
 }
