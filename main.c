@@ -1,0 +1,171 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <unistd.h>
+#include "runway.h"
+#include "plane.h"
+
+#define DEFAULT_TOTAL_PLANES 10
+#define DEFAULT_EMERGENCY_PROBABILITY 15 // 15%
+#define DEFAULT_LANDING_DURATION 5       // 5 seconds
+#define DEFAULT_TAKEOFF_DURATION 4       // 4 seconds
+
+// Function to generate random operation type
+OperationType random_operation()
+{
+    return (rand() % 2 == 0) ? LANDING : TAKEOFF;
+}
+
+// Function to determine if plane is emergency based on probability
+PriorityLevel random_priority(int emergency_prob)
+{
+    return (rand() % 100 < emergency_prob) ? EMERGENCY : NORMAL;
+}
+
+// Display usage information
+void print_usage(const char *program_name)
+{
+    printf("Airport Runway Management System Simulator\n");
+    printf("==========================================\n\n");
+    printf("Usage: %s [options]\n\n", program_name);
+    printf("Options:\n");
+    printf("  -n <number>    Total number of planes (default: %d)\n", DEFAULT_TOTAL_PLANES);
+    printf("  -e <percent>   Emergency probability 0-100 (default: %d%%)\n", DEFAULT_EMERGENCY_PROBABILITY);
+    printf("  -l <seconds>   Landing duration (default: %d seconds)\n", DEFAULT_LANDING_DURATION);
+    printf("  -t <seconds>   Takeoff duration (default: %d seconds)\n", DEFAULT_TAKEOFF_DURATION);
+    printf("  -h             Display this help message\n\n");
+    printf("Example:\n");
+    printf("  %s -n 20 -e 20 -l 6 -t 4\n", program_name);
+    printf("  (Simulate 20 planes with 20%% emergency, 6s landing, 4s takeoff)\n\n");
+}
+
+int main(int argc, char *argv[])
+{
+    // Default parameters
+    int total_planes = DEFAULT_TOTAL_PLANES;
+    int emergency_prob = DEFAULT_EMERGENCY_PROBABILITY;
+    int landing_duration = DEFAULT_LANDING_DURATION;
+    int takeoff_duration = DEFAULT_TAKEOFF_DURATION;
+
+    // Parse command-line arguments
+    int opt;
+    while ((opt = getopt(argc, argv, "n:e:l:t:h")) != -1)
+    {
+        switch (opt)
+        {
+        case 'n':
+            total_planes = atoi(optarg);
+            if (total_planes <= 0)
+            {
+                fprintf(stderr, "Error: Number of planes must be positive\n");
+                return 1;
+            }
+            break;
+        case 'e':
+            emergency_prob = atoi(optarg);
+            if (emergency_prob < 0 || emergency_prob > 100)
+            {
+                fprintf(stderr, "Error: Emergency probability must be between 0 and 100\n");
+                return 1;
+            }
+            break;
+        case 'l':
+            landing_duration = atoi(optarg);
+            if (landing_duration <= 0)
+            {
+                fprintf(stderr, "Error: Landing duration must be positive\n");
+                return 1;
+            }
+            break;
+        case 't':
+            takeoff_duration = atoi(optarg);
+            if (takeoff_duration <= 0)
+            {
+                fprintf(stderr, "Error: Takeoff duration must be positive\n");
+                return 1;
+            }
+            break;
+        case 'h':
+            print_usage(argv[0]);
+            return 0;
+        default:
+            print_usage(argv[0]);
+            return 1;
+        }
+    }
+
+    // Seed random number generator
+    srand(time(NULL));
+
+    // Print simulation parameters
+    printf("\n");
+    printf("╔══════════════════════════════════════════════════════════╗\n");
+    printf("║   AIRPORT RUNWAY MANAGEMENT SYSTEM SIMULATION           ║\n");
+    printf("╚══════════════════════════════════════════════════════════╝\n");
+    printf("\n");
+    printf("Simulation Parameters:\n");
+    printf("  • Total Planes: %d\n", total_planes);
+    printf("  • Emergency Probability: %d%%\n", emergency_prob);
+    printf("  • Landing Duration: %d seconds\n", landing_duration);
+    printf("  • Takeoff Duration: %d seconds\n", takeoff_duration);
+    printf("  • Checkpoint Interval: 500ms (for preemption checks)\n");
+    printf("\n");
+    printf("═══════════════════════════════════════════════════════════\n\n");
+
+    // Initialize runway system
+    runway_init(&runway_system, landing_duration, takeoff_duration);
+    runway_system.total_planes = total_planes;
+
+    // Allocate array for planes
+    Plane *planes = (Plane *)malloc(total_planes * sizeof(Plane));
+    if (planes == NULL)
+    {
+        fprintf(stderr, "Error: Failed to allocate memory for planes\n");
+        return 1;
+    }
+
+    // Create and initialize planes
+    printf("[SETUP] Creating %d planes...\n", total_planes);
+    for (int i = 0; i < total_planes; i++)
+    {
+        OperationType op = random_operation();
+        PriorityLevel priority = random_priority(emergency_prob);
+        plane_init(&planes[i], i + 1, op, priority);
+    }
+
+    printf("[SETUP] All planes created. Starting simulation...\n\n");
+    sleep(1);
+
+    // Spawn plane threads with staggered arrival
+    for (int i = 0; i < total_planes; i++)
+    {
+        if (pthread_create(&planes[i].thread, NULL, plane_thread_function, &planes[i]) != 0)
+        {
+            fprintf(stderr, "Error: Failed to create thread for plane %d\n", i + 1);
+            return 1;
+        }
+
+        // Stagger arrivals (random 0-2 seconds between planes)
+        usleep((rand() % 2000 + 100) * 1000); // 100ms to 2.1s
+    }
+
+    // Wait for all planes to complete
+    printf("\n[SYSTEM] Waiting for all planes to complete...\n\n");
+    for (int i = 0; i < total_planes; i++)
+    {
+        pthread_join(planes[i].thread, NULL);
+        plane_destroy(&planes[i]);
+    }
+
+    // Display final statistics
+    printf("\n");
+    runway_display_stats();
+
+    // Cleanup
+    runway_destroy(&runway_system);
+    free(planes);
+
+    printf("Simulation completed successfully!\n\n");
+
+    return 0;
+}
