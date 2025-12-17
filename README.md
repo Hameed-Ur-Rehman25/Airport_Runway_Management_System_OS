@@ -1,8 +1,8 @@
-# Airport Runway Management System Simulation
+# Airport Runway Management System - Real-Time Monitor
 
 ## Project Overview
 
-This project simulates an airport runway management system using Operating System concepts such as **semaphores**, **synchronization**, and **priority scheduling**. The system models planes as processes (threads) competing for access to a single runway resource, with emergency aircraft receiving higher priority and the ability to preempt normal operations.
+This project simulates an airport runway management system with **real-time monitoring and visualization** using Operating System concepts such as **semaphores**, **synchronization**, and **priority scheduling**. The system models planes as processes (threads) competing for access to a single runway resource, with emergency aircraft receiving higher priority and the ability to preempt normal operations. Features an enhanced GUI mode for live monitoring of runway operations, queue status, and system statistics.
 
 **✨ NEW: Enhanced GUI Mode Available!** Run with `-g` flag for an improved real-time visual interface featuring:
 
