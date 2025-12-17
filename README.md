@@ -150,7 +150,7 @@ make run-gui
 
 ```
 ╔══════════════════════════════════════════════════════════╗
-║   AIRPORT RUNWAY MANAGEMENT SYSTEM SIMULATION           ║
+║    AIRPORT RUNWAY MANAGEMENT SYSTEM SIMULATION           ║
 ╚══════════════════════════════════════════════════════════╝
 
 Simulation Parameters:
