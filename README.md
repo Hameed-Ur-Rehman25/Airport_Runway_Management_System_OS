@@ -4,7 +4,14 @@
 
 This project simulates an airport runway management system using Operating System concepts such as **semaphores**, **synchronization**, and **priority scheduling**. The system models planes as processes (threads) competing for access to a single runway resource, with emergency aircraft receiving higher priority and the ability to preempt normal operations.
 
-**✨ NEW: GUI Mode Available!** Run with `-g` flag for real-time visual interface using ncurses. See [GUI_README.md](GUI_README.md) for details.
+**✨ NEW: Enhanced GUI Mode Available!** Run with `-g` flag for an improved real-time visual interface featuring:
+
+- **Box-drawing runway visualization** with animated plane progress
+- **Color-coded priority queues** with numbered items and progress indicators
+- **Real-time statistics panel** with overall completion progress bar
+- **Smooth animations** with optimized update intervals for better visibility
+
+See [GUI_README.md](GUI_README.md) for detailed GUI documentation.
 
 ## Operating System Concepts Demonstrated
 
@@ -25,7 +32,7 @@ This project simulates an airport runway management system using Operating Syste
 - Normal operations can be interrupted by emergency planes
 - **Checkpoint mechanism**: Interrupted planes save their progress (0-100%)
 - Operations resume from last checkpoint when runway becomes available
-- Preemption checks occur every **500ms** for realistic interrupt response
+- Preemption checks occur every **800ms** for smooth visualization and realistic interrupt response
 
 ### 4. **Concurrency Control**
 
@@ -105,10 +112,9 @@ make help
 
 ```bash
 ./runway_simulator -g
-./runway_simulator
 ```
 
-Runs with default parameters (10 planes, 15% emergency, 5s landing, 4s takeoff)
+Runs with default parameters (10 planes, 15% emergency, 8s landing, 6s takeoff)
 
 ### Custom Parameters
 
@@ -122,8 +128,9 @@ Runs with default parameters (10 planes, 15% emergency, 5s landing, 4s takeoff)
 | -------------- | ------------------------------ | --------- |
 | `-n <number>`  | Total number of planes         | 10        |
 | `-e <percent>` | Emergency probability (0-100%) | 15%       |
-| `-l <seconds>` | Landing duration               | 5 seconds |
-| `-t <seconds>` | Takeoff duration               | 4 seconds |
+| `-l <seconds>` | Landing duration               | 8 seconds |
+| `-t <seconds>` | Takeoff duration               | 6 seconds |
+| `-g`           | Enable GUI mode (ncurses)      | disabled  |
 | `-h`           | Display help message           | -         |
 
 ### Quick Run Commands
@@ -149,9 +156,9 @@ make run-gui
 Simulation Parameters:
   • Total Planes: 8
   • Emergency Probability: 25%
-  • Landing Duration: 3 seconds
-  • Takeoff Duration: 2 seconds
-  • Checkpoint Interval: 500ms
+  • Landing Duration: 8 seconds
+  • Takeoff Duration: 6 seconds
+  • Checkpoint Interval: 800ms
 
 [23:03:55] [ARRIVAL] Plane 1 (NORMAL, TAKEOFF) requesting runway access
 [23:03:55] [QUEUE] Plane 1 added to NORMAL queue (Queue size: 1)
@@ -182,7 +189,7 @@ Normal Queue Final: 0
 ### 2. Plane Arrival
 
 - Each plane is a separate thread
-- Planes arrive with staggered timing (100ms - 2.1s intervals)
+- Planes arrive with staggered timing (1s - 3s intervals for better visualization)
 - Randomly assigned operation type (LANDING/TAKEOFF) and priority (EMERGENCY/NORMAL)
 
 ### 3. Queue Management
@@ -200,9 +207,10 @@ Normal Queue Final: 0
 ### 5. Runway Operation
 
 - Plane acquires runway access semaphore
-- Operation proceeds in 500ms intervals
+- Operation proceeds in 800ms intervals for smooth visualization
 - Each interval checks for emergency preemption (normal planes only)
 - Progress tracked as checkpoint percentage (0-100%)
+- GUI updates in real-time showing runway status and animated progress
 
 ### 6. Preemption Handling
 
@@ -265,11 +273,11 @@ if (emergency_queue_not_empty) {
 
 - 🛫 Multiple runways with load balancing
 - 🌐 Network-based distributed simulation
-- 📱 GUI visualization with real-time animation
-- 📊 Advanced statistics (wait time distribution, throughput analysis)
+- � Advanced statistics (wait time distribution, throughput analysis)
 - ⚡ Different scheduling algorithms (FCFS, Round-Robin, Weighted Fair Queuing)
-- 🔧 Configurable checkpoint intervals
+- 🔧 Configurable checkpoint intervals via command-line
 - 📝 Logging to file for post-simulation analysis
+- 🎨 Enhanced GUI color schemes and themes
 
 ## References
 

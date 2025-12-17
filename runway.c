@@ -157,13 +157,13 @@ void runway_perform_operation(Plane *plane)
                             duration);
     }
 
-    // Perform operation with frequent checkpoint checking (every 500ms)
-    int checkpoint_interval_ms = 500;
+    // Perform operation with slower checkpoint checking (every 800ms for better visualization)
+    int checkpoint_interval_ms = 800;
     int total_intervals = (remaining_time * 1000) / checkpoint_interval_ms;
 
     for (int i = 0; i < total_intervals; i++)
     {
-        usleep(checkpoint_interval_ms * 1000); // Sleep for 500ms
+        usleep(checkpoint_interval_ms * 1000); // Sleep for 800ms
 
         // Update checkpoint progress
         plane->checkpoint_progress = elapsed_time +

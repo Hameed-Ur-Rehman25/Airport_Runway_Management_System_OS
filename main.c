@@ -8,8 +8,8 @@
 
 #define DEFAULT_TOTAL_PLANES 10
 #define DEFAULT_EMERGENCY_PROBABILITY 15 // 15%
-#define DEFAULT_LANDING_DURATION 5       // 5 seconds
-#define DEFAULT_TAKEOFF_DURATION 4       // 4 seconds
+#define DEFAULT_LANDING_DURATION 8       // 8 seconds for better visualization
+#define DEFAULT_TAKEOFF_DURATION 6       // 6 seconds for better visualization
 
 // Function to generate random operation type
 OperationType random_operation()
@@ -177,8 +177,8 @@ int main(int argc, char *argv[])
             return 1;
         }
 
-        // Stagger arrivals (random 0-2 seconds between planes)
-        usleep((rand() % 2000 + 100) * 1000); // 100ms to 2.1s
+        // Stagger arrivals for better visualization (1-3 seconds between planes)
+        usleep((rand() % 2000 + 1000) * 1000); // 1s to 3s
     }
 
     // Wait for all planes to complete
